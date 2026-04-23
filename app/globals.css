@@ -1,26 +1,57 @@
-@import "tailwindcss";
-
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Default Hue: A calm blue/purple */
+  --primary-hue: 240; 
+  --saturation: 70%;
+  
+  /* Dynamic color palette based on HSL */
+  --bg-color: hsl(var(--primary-hue), 15%, 5%);
+  --bg-card: hsl(var(--primary-hue), 20%, 10%);
+  --text-main: hsl(var(--primary-hue), 10%, 95%);
+  --text-muted: hsl(var(--primary-hue), 10%, 70%);
+  
+  --primary-color: hsl(var(--primary-hue), var(--saturation), 60%);
+  --primary-hover: hsl(var(--primary-hue), var(--saturation), 70%);
+  --primary-glow: hsla(var(--primary-hue), var(--saturation), 60%, 0.3);
+
+  /* Shared Variables */
+  --border-color: hsl(var(--primary-hue), 20%, 20%);
+  --border-radius: 20px;
+  --transition-speed: 0.3s;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--bg-color);
+  color: var(--text-main);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  min-height: 100vh;
+  /* Smooth transition for theme switching */
+  transition: background-color 0.8s ease, color 0.8s ease;
+  overflow-x: hidden;
+  padding-bottom: 80px; /* Space for mobile nav */
+}
+
+/* Base interactive resets */
+button, a {
+  all: unset;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+button:focus-visible, a:focus-visible {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+.app-container {
+  max-width: 600px; /* Mobile first, capped width on desktop */
+  margin: 0 auto;
+  padding: 20px;
+  position: relative;
+  min-height: 100vh;
 }

@@ -1,65 +1,121 @@
-import Image from "next/image";
+"use client";
+
+import { PageWrapper } from "@/components/PageWrapper";
+import { useTheme } from "@/components/ThemeContext";
+import { motion } from "framer-motion";
 
 export default function Home() {
+  const { hue, setHue } = useTheme();
+
+  const moods = [
+    { label: "Energetic", color: 30 }, // Orange
+    { label: "Calm", color: 240 }, // Blue
+    { label: "Focused", color: 280 }, // Purple
+    { label: "Anxious", color: 190 }, // Teal
+    { label: "Burned Out", color: 0 }, // Red
+  ];
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <PageWrapper>
+      <header style={styles.header}>
+        <h1 style={styles.title}>Good Morning, Rozzyne!</h1>
+        <p style={styles.subtitle}>How is your energy right now?</p>
+      </header>
+
+      <section style={styles.moodGrid}>
+        {moods.map((mood) => (
+          <motion.button
+            key={mood.label}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            style={{
+              ...styles.moodCard,
+              borderColor: hue === mood.color ? `hsl(${mood.color}, 70%, 60%)` : "var(--border-color)",
+              backgroundColor: hue === mood.color ? `hsla(${mood.color}, 70%, 60%, 0.1)` : "var(--bg-card)",
+            }}
+            onClick={() => setHue(mood.color)}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+            {mood.label}
+          </motion.button>
+        ))}
+      </section>
+
+      <section style={styles.dashboard}>
+        <h2 style={styles.sectionTitle}>Today's Plan</h2>
+        <div style={styles.taskCard}>
+          <div style={styles.taskDot} />
+          <div style={styles.taskInfo}>
+            <h3 style={styles.taskTitle}>Build Zync Frontend</h3>
+            <p style={styles.taskType}>Deep Work • High Priority</p>
+          </div>
         </div>
-      </main>
-    </div>
+      </section>
+    </PageWrapper>
   );
 }
+
+const styles = {
+  header: {
+    marginBottom: "30px",
+  },
+  title: {
+    fontSize: "28px",
+    fontWeight: "bold",
+    marginBottom: "5px",
+    letterSpacing: "-0.5px",
+  },
+  subtitle: {
+    color: "var(--text-muted)",
+    fontSize: "16px",
+  },
+  moodGrid: {
+    display: "grid",
+    gridTemplateColumns: "repeat(auto-fit, minmax(100px, 1fr))",
+    gap: "10px",
+    marginBottom: "40px",
+  },
+  moodCard: {
+    padding: "15px 10px",
+    borderRadius: "var(--border-radius)",
+    border: "2px solid var(--border-color)",
+    textAlign: "center" as const,
+    fontSize: "14px",
+    fontWeight: "500",
+    transition: "background-color 0.3s, border-color 0.3s",
+  },
+  dashboard: {
+    marginTop: "20px",
+  },
+  sectionTitle: {
+    fontSize: "20px",
+    marginBottom: "15px",
+  },
+  taskCard: {
+    backgroundColor: "var(--bg-card)",
+    borderRadius: "var(--border-radius)",
+    padding: "20px",
+    display: "flex",
+    alignItems: "center",
+    gap: "15px",
+    border: "1px solid var(--border-color)",
+  },
+  taskDot: {
+    width: "12px",
+    height: "12px",
+    borderRadius: "6px",
+    backgroundColor: "var(--primary-color)",
+    boxShadow: "0 0 10px var(--primary-glow)",
+  },
+  taskInfo: {
+    flex: 1,
+  },
+  taskTitle: {
+    fontSize: "16px",
+    fontWeight: "bold",
+    marginBottom: "4px",
+  },
+  taskType: {
+    fontSize: "12px",
+    color: "var(--text-muted)",
+  }
+};
