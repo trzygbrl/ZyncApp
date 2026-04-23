@@ -14,6 +14,7 @@ export async function addTask(formData: FormData) {
   const title = formData.get("title") as string;
   const type = formData.get("type") as string;
   const priority = formData.get("priority") as string;
+  const deadline = formData.get("deadline") as string; 
 
   const { error } = await supabase
     .from("tasks")
@@ -23,7 +24,9 @@ export async function addTask(formData: FormData) {
         title,
         type: type || "General",
         priority: priority || "Medium",
+        deadline: deadline ? new Date(deadline).toISOString() : null,
         status: "pending",
+        sort_order: 0,
       },
     ]);
 

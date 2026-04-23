@@ -9,11 +9,12 @@ export default async function Home() {
   // If we are here, middleware verified auth, but just in case
   if (!user) return null;
 
-  // Fetch tasks
+  // Fetch tasks ordered by the AI's sort_order, then fallback to newest
   const { data: tasks } = await supabase
     .from("tasks")
     .select("*")
     .eq("user_id", user.id)
+    .order("sort_order", { ascending: true })
     .order("created_at", { ascending: false });
 
   // Extract a friendly name from email
@@ -37,7 +38,10 @@ export default async function Home() {
                 <div style={{...styles.taskDot, backgroundColor: getPriorityColor(task.priority)}} />
                 <div style={styles.taskInfo}>
                   <h3 style={styles.taskTitle}>{task.title}</h3>
-                  <p style={styles.taskType}>{task.type} • {task.priority} Priority</p>
+                  <p style={styles.taskType}>
+                    {task.type} • {task.priority}
+                    {task.deadline && ` • Due: ${new Date(task.deadline).toLocaleString([], {month: 'short', day: 'numeric', hour: '2-digit', minute:'2-digit'})}`}
+                  </p>
                 </div>
               </div>
             ))
@@ -67,7 +71,7 @@ const styles = {
   header: { marginBottom: "30px" },
   title: { fontSize: "28px", fontWeight: "bold", marginBottom: "5px", letterSpacing: "-0.5px" },
   subtitle: { color: "var(--text-muted)", fontSize: "16px" },
-  dashboard: { marginTop: "40px" },
+  dashboard: { marginTop: "20px" },
   sectionTitle: { fontSize: "20px", marginBottom: "20px", fontWeight: "bold" },
   taskList: { display: "flex", flexDirection: "column" as const, gap: "15px" },
   taskCard: {

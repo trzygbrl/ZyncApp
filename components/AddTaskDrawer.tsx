@@ -67,6 +67,15 @@ export function AddTaskDrawer({ onClose }: { onClose: () => void }) {
               style={styles.input} 
             />
           </div>
+          
+          <div style={styles.field}>
+            <label style={styles.label}>Deadline</label>
+            <input 
+              type="datetime-local" 
+              name="deadline" 
+              style={styles.input} 
+            />
+          </div>
 
           <div style={styles.field}>
             <label style={styles.label}>Priority</label>
@@ -122,7 +131,7 @@ const styles = {
     display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "30px",
   },
   title: { fontSize: "20px", fontWeight: "bold" },
-  closeBtn: { color: "var(--text-muted)", background: "none", border: "none" },
+  closeBtn: { color: "var(--text-muted)", background: "none", border: "none", cursor: "pointer" },
   form: { display: "flex", flexDirection: "column" as const, gap: "25px" },
   inputLarge: {
     fontSize: "24px", border: "none", backgroundColor: "transparent", color: "var(--text-main)", outline: "none", fontWeight: "bold"
@@ -134,9 +143,9 @@ const styles = {
   },
   pillGroup: { display: "flex", gap: "10px", flexWrap: "wrap" as const },
   pill: {
-    padding: "10px 18px", borderRadius: "20px", border: "1px solid", fontSize: "14px", fontWeight: "600", transition: "all 0.2s",
+    padding: "10px 18px", borderRadius: "20px", border: "1px solid", fontSize: "14px", fontWeight: "600", transition: "all 0.2s", cursor: "pointer"
   },
   submitBtn: {
-    marginTop: "10px", padding: "18px", borderRadius: "16px", backgroundColor: "var(--primary-color)", color: "#fff", fontWeight: "bold", fontSize: "18px", textAlign: "center" as const, boxShadow: "0 4px 15px var(--primary-glow)", border: "none"
+    marginTop: "10px", padding: "18px", borderRadius: "16px", backgroundColor: "var(--primary-color)", color: "#fff", fontWeight: "bold", fontSize: "18px", textAlign: "center" as const, boxShadow: "0 4px 15px var(--primary-glow)", border: "none", cursor: "pointer"
   }
 };
