@@ -22,19 +22,37 @@ export async function zyncSchedule(hue: number, label: string) {
 
   if (!tasks || tasks.length === 0) return;
 
-  // 3. Call Gemini API
+  // 3. Fetch today's classes
+  const dayOfWeek = new Date().getDay(); // 0-6
+  const { data: classes } = await supabase
+    .from("student_schedule")
+    .select("*")
+    .eq("user_id", user.id)
+    .eq("day_of_week", dayOfWeek)
+    .eq("is_active", true);
+
+  // 4. Call Gemini API
   const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
   const prompt = `
-    You are Zync, an emotionally intelligent scheduler. 
-    The user's current mood is: ${label} (Hue: ${hue}).
-    Here are their pending tasks: ${JSON.stringify(tasks)}.
+    You are Zync, an emotionally intelligent calendar AI. 
+    Current Date: ${new Date().toISOString()}
+    Current Mood: ${label} (Hue: ${hue}).
     
-    If they are burned out or anxious, prioritize low-effort or administrative tasks to build momentum.
-    If they are energetic or focused, prioritize critical or deep work tasks.
-    Also consider deadlines (closer deadlines should generally be higher, but mood takes priority).
-
-    Return ONLY a JSON array of task IDs in the optimal order from first to last. Do not include any markdown formatting or extra text. Just the raw JSON array.
-    Example: ["id-1", "id-2", "id-3"]
+    Pending Tasks: ${JSON.stringify(tasks)}
+    Today's Fixed Classes: ${JSON.stringify(classes)}
+    
+    Your job is to build a daily schedule.
+    1. Estimate how long each task takes based on its title and type.
+    2. Assign a \`scheduled_start\` and \`scheduled_end\` (ISO 8601 strings for TODAY) for each task.
+    3. DO NOT overlap tasks with each other or with Fixed Classes. Assume waking hours are 08:00 to 22:00.
+    4. Upgrade the \`new_priority\` to "Critical" or "High" if a deadline is approaching very soon.
+    5. Order them chronologically.
+    
+    Return ONLY a JSON array of objects. Do not include any markdown formatting or extra text. Just the raw JSON array.
+    Format exactly like this:
+    [
+      { "id": "task-uuid", "new_priority": "Critical", "scheduled_start": "2026-04-23T09:00:00Z", "scheduled_end": "2026-04-23T10:00:00Z" }
+    ]
   `;
 
   try {
@@ -44,21 +62,22 @@ export async function zyncSchedule(hue: number, label: string) {
     });
     
     let text = response.text || "[]";
-    // Clean up if it returned markdown
-    if (text.startsWith("\`\`\`json")) {
-        text = text.replace(/\`\`\`json/g, "").replace(/\`\`\`/g, "").trim();
-    } else if (text.startsWith("\`\`\`")) {
-        text = text.replace(/\`\`\`/g, "").trim();
-    }
+    if (text.startsWith("\`\`\`json")) text = text.replace(/\`\`\`json/g, "").replace(/\`\`\`/g, "").trim();
+    else if (text.startsWith("\`\`\`")) text = text.replace(/\`\`\`/g, "").trim();
     
-    const sortedIds: string[] = JSON.parse(text);
+    const sortedTasks: any[] = JSON.parse(text);
 
-    // 4. Update the sort_order in the database
-    for (let i = 0; i < sortedIds.length; i++) {
+    // 5. Update the tasks with times in the database
+    for (let i = 0; i < sortedTasks.length; i++) {
       await supabase
         .from("tasks")
-        .update({ sort_order: i })
-        .eq("id", sortedIds[i])
+        .update({ 
+          sort_order: i,
+          priority: sortedTasks[i].new_priority,
+          scheduled_start: sortedTasks[i].scheduled_start,
+          scheduled_end: sortedTasks[i].scheduled_end
+        })
+        .eq("id", sortedTasks[i].id)
         .eq("user_id", user.id);
     }
 
