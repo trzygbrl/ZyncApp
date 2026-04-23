@@ -1,98 +1,78 @@
-"use client";
-
+import { createClient } from "@/utils/supabase/server";
+import { MoodSelector } from "@/components/MoodSelector";
 import { PageWrapper } from "@/components/PageWrapper";
-import { useTheme } from "@/components/ThemeContext";
-import { motion } from "framer-motion";
 
-export default function Home() {
-  const { hue, setHue } = useTheme();
+export default async function Home() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
 
-  const moods = [
-    { label: "Energetic", color: 30 }, // Orange
-    { label: "Calm", color: 240 }, // Blue
-    { label: "Focused", color: 280 }, // Purple
-    { label: "Anxious", color: 190 }, // Teal
-    { label: "Burned Out", color: 0 }, // Red
-  ];
+  // If we are here, middleware verified auth, but just in case
+  if (!user) return null;
+
+  // Fetch tasks
+  const { data: tasks } = await supabase
+    .from("tasks")
+    .select("*")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false });
+
+  // Extract a friendly name from email
+  const name = user.email?.split("@")[0] || "Rozzyne";
 
   return (
     <PageWrapper>
       <header style={styles.header}>
-        <h1 style={styles.title}>Good Morning, Rozzyne!</h1>
+        <h1 style={styles.title}>Good Morning, {name}!</h1>
         <p style={styles.subtitle}>How is your energy right now?</p>
       </header>
 
-      <section style={styles.moodGrid}>
-        {moods.map((mood) => (
-          <motion.button
-            key={mood.label}
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            style={{
-              ...styles.moodCard,
-              borderColor: hue === mood.color ? `hsl(${mood.color}, 70%, 60%)` : "var(--border-color)",
-              backgroundColor: hue === mood.color ? `hsla(${mood.color}, 70%, 60%, 0.1)` : "var(--bg-card)",
-            }}
-            onClick={() => setHue(mood.color)}
-          >
-            {mood.label}
-          </motion.button>
-        ))}
-      </section>
+      <MoodSelector />
 
       <section style={styles.dashboard}>
-        <h2 style={styles.sectionTitle}>Today's Plan</h2>
-        <div style={styles.taskCard}>
-          <div style={styles.taskDot} />
-          <div style={styles.taskInfo}>
-            <h3 style={styles.taskTitle}>Build Zync Frontend</h3>
-            <p style={styles.taskType}>Deep Work • High Priority</p>
-          </div>
+        <h2 style={styles.sectionTitle}>Your Tasks</h2>
+        <div style={styles.taskList}>
+          {tasks && tasks.length > 0 ? (
+            tasks.map((task: any) => (
+              <div key={task.id} style={styles.taskCard}>
+                <div style={{...styles.taskDot, backgroundColor: getPriorityColor(task.priority)}} />
+                <div style={styles.taskInfo}>
+                  <h3 style={styles.taskTitle}>{task.title}</h3>
+                  <p style={styles.taskType}>{task.type} • {task.priority} Priority</p>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div style={styles.emptyState}>
+              <p style={styles.emptyText}>Your schedule is totally clear!</p>
+              <p style={styles.emptySubtext}>Tap the + button below to start planning.</p>
+            </div>
+          )}
         </div>
       </section>
     </PageWrapper>
   );
 }
 
+function getPriorityColor(priority: string) {
+  switch (priority.toLowerCase()) {
+    case 'critical': return '#ff4757';
+    case 'high': return '#ffa502';
+    case 'medium': return 'var(--primary-color)';
+    case 'low': return '#2ed573';
+    default: return 'var(--primary-color)';
+  }
+}
+
 const styles = {
-  header: {
-    marginBottom: "30px",
-  },
-  title: {
-    fontSize: "28px",
-    fontWeight: "bold",
-    marginBottom: "5px",
-    letterSpacing: "-0.5px",
-  },
-  subtitle: {
-    color: "var(--text-muted)",
-    fontSize: "16px",
-  },
-  moodGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fit, minmax(100px, 1fr))",
-    gap: "10px",
-    marginBottom: "40px",
-  },
-  moodCard: {
-    padding: "15px 10px",
-    borderRadius: "var(--border-radius)",
-    border: "2px solid var(--border-color)",
-    textAlign: "center" as const,
-    fontSize: "14px",
-    fontWeight: "500",
-    transition: "background-color 0.3s, border-color 0.3s",
-  },
-  dashboard: {
-    marginTop: "20px",
-  },
-  sectionTitle: {
-    fontSize: "20px",
-    marginBottom: "15px",
-  },
+  header: { marginBottom: "30px" },
+  title: { fontSize: "28px", fontWeight: "bold", marginBottom: "5px", letterSpacing: "-0.5px" },
+  subtitle: { color: "var(--text-muted)", fontSize: "16px" },
+  dashboard: { marginTop: "40px" },
+  sectionTitle: { fontSize: "20px", marginBottom: "20px", fontWeight: "bold" },
+  taskList: { display: "flex", flexDirection: "column" as const, gap: "15px" },
   taskCard: {
     backgroundColor: "var(--bg-card)",
-    borderRadius: "var(--border-radius)",
+    borderRadius: "16px",
     padding: "20px",
     display: "flex",
     alignItems: "center",
@@ -103,19 +83,12 @@ const styles = {
     width: "12px",
     height: "12px",
     borderRadius: "6px",
-    backgroundColor: "var(--primary-color)",
-    boxShadow: "0 0 10px var(--primary-glow)",
+    boxShadow: "0 0 10px rgba(255,255,255,0.1)",
   },
-  taskInfo: {
-    flex: 1,
-  },
-  taskTitle: {
-    fontSize: "16px",
-    fontWeight: "bold",
-    marginBottom: "4px",
-  },
-  taskType: {
-    fontSize: "12px",
-    color: "var(--text-muted)",
-  }
+  taskInfo: { flex: 1 },
+  taskTitle: { fontSize: "16px", fontWeight: "bold", marginBottom: "4px" },
+  taskType: { fontSize: "13px", color: "var(--text-muted)" },
+  emptyState: { padding: "40px 20px", textAlign: "center" as const, backgroundColor: "var(--bg-card)", borderRadius: "16px", border: "1px dashed var(--border-color)" },
+  emptyText: { color: "var(--text-main)", fontWeight: "bold", fontSize: "16px", marginBottom: "8px" },
+  emptySubtext: { color: "var(--text-muted)", fontSize: "14px" }
 };

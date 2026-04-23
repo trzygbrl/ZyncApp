@@ -1,29 +1,53 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { Home, Plus, User } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { AddTaskDrawer } from "./AddTaskDrawer";
+import { usePathname } from "next/navigation";
 
 export function MobileNav() {
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const pathname = usePathname();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Don't render nav on the login page
+  if (pathname === '/login') return null;
+  if (!mounted) return null;
+
   return (
-    <nav style={styles.nav}>
-      <div style={styles.navContent}>
-        <button style={styles.iconButton}>
-          <Home size={24} />
-        </button>
+    <>
+      <nav style={styles.nav}>
+        <div style={styles.navContent}>
+          <button style={styles.iconButton}>
+            <Home size={24} />
+          </button>
 
-        <motion.button 
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-          style={styles.fab}
-        >
-          <Plus size={32} color="#fff" />
-        </motion.button>
+          <motion.button 
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+            style={styles.fab}
+            onClick={() => setIsDrawerOpen(true)}
+          >
+            <Plus size={32} color="#fff" />
+          </motion.button>
 
-        <button style={styles.iconButton}>
-          <User size={24} />
-        </button>
-      </div>
-    </nav>
+          <button style={styles.iconButton}>
+            <User size={24} />
+          </button>
+        </div>
+      </nav>
+
+      <AnimatePresence>
+        {isDrawerOpen && (
+          <AddTaskDrawer onClose={() => setIsDrawerOpen(false)} />
+        )}
+      </AnimatePresence>
+    </>
   );
 }
 
@@ -53,6 +77,8 @@ const styles = {
     display: "flex",
     flexDirection: "column" as const,
     alignItems: "center",
+    background: "none",
+    border: "none",
   },
   fab: {
     backgroundColor: "var(--primary-color)",
@@ -64,5 +90,6 @@ const styles = {
     alignItems: "center",
     boxShadow: "0 4px 20px var(--primary-glow)",
     transform: "translateY(-20px)",
+    border: "none",
   }
 };
